@@ -2,12 +2,16 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
+/*
+
+*/
 public class AudioManager : AudioEngine
 {
     private bool m_AudioEnabled = true;
 
-    #region Singleton Code
-
+    /**************************** SINGLETON ****************************
+    Code that causes the AudioManager to be a Singleton pattern in Unity3D
+    ********************************************************************/
     private static AudioManager instance;
 
     public static AudioManager Instance
@@ -34,10 +38,7 @@ public class AudioManager : AudioEngine
 
         base.Awake();
     }
-
-    #endregion    
-
-    #region Current Music Variable
+    /**************************** END SINGLETON ****************************/
 
     private GameObject m_CurrentMusicPrefab;
     public GameObject currentMusicPrefab
@@ -46,25 +47,7 @@ public class AudioManager : AudioEngine
         set { m_CurrentMusicPrefab = value; }
     }
 
-    // Current music AudioFile
-    /*
-    private List<GameObject> m_CurrentMusic = new List<GameObject>();
-    public List<GameObject> currentMusic
-    {
-        get { return m_CurrentMusic; }
-        set { m_CurrentMusic = value; }
-    }
-
-    public void ClearMusic()
-    {
-        m_CurrentMusic.Clear();
-    }
-    */
-
-    #endregion
-
-    #region Baby Sound Variables
-
+    // Baby sound variables
     private float m_BabyCryVolume;
     private float m_BabyCalmTimer;
     private float m_BabyCalmInterval;
@@ -76,19 +59,18 @@ public class AudioManager : AudioEngine
     private float m_BabyCryInterval;
     private float m_BabyFadeOutInterval;
     private float m_BabyCryMaxVolume;
-    private float m_BabyCryMinVolume;    
-
+    private float m_BabyCryMinVolume;  
+    private float m_BabyCryVolumeIncrement;
+    private float m_BabyCryVolumeUpperBound;
+    private float m_BabyCryVolumeLowerBound;  
     private int m_BabyHappyUpperBound;
     private int m_BabyHappyLowerBound;
     private int m_BabyCryUpperBound;
-    private int m_BabyCryLowerBound;
-    private float m_BabyCryVolumeIncrement;
-    private float m_BabyCryVolumeUpperBound;
-    private float m_BabyCryVolumeLowerBound;
-
+    private int m_BabyCryLowerBound;    
     private bool m_BabyCalmingStateTriggered;
     private bool m_BabyFadeOut;
 
+    // Enums that register the baby's current state; this controls the baby's audible behavior.
     private enum BabyState
     {
         HAPPY,
@@ -99,10 +81,7 @@ public class AudioManager : AudioEngine
     };
     private BabyState m_BabyState = BabyState.NO_BABY;
 
-    #endregion
-
-    #region Ambiance Sound Variables
-
+    // Ambiance sound variables
     private float m_CricketsTimer1;
     private float m_CricketsTimer2;
     private float m_CricketsInterval1;
@@ -178,11 +157,6 @@ public class AudioManager : AudioEngine
     Globals.Ambiance m_TransitionToAmbiance;
     private bool m_ChangeAmbiance;
 
-    #endregion
-
-    #region Object Sound Variables
-
-    #endregion
 
     // Use this for initialization
     void Start()
@@ -630,7 +604,7 @@ public class AudioManager : AudioEngine
         }
     }
 
-    #region Ambiance
+    /**************************** FUNCTIONS FOR MODIFYING GAMES AMBIANT SOUNDS ****************************/
 
     public void ChangeAmbiance()
     {
@@ -796,9 +770,7 @@ public class AudioManager : AudioEngine
         m_WaterDropActive = flag;
     }
 
-    #endregion
-
-    #region Fading
+    /**************************** FUNCTIONS FOR FADING ****************************/
 
     // Function to fade in all of the ambiant sounds that should
     // currently be playing over a specific time interval.
@@ -950,9 +922,7 @@ public class AudioManager : AudioEngine
         }
     }
 
-    #endregion
-
-    #region Stopping
+    /**************************** FUNCTIONS FOR STOPPING SOUNDS/MUSIC ****************************/
 
     // Function to stop all sounds that aren't music.
     public void StopSounds()
@@ -984,13 +954,11 @@ public class AudioManager : AudioEngine
         }
     }
 
-    #endregion
-
-    #region Baby
+    /**************************** FUNCTIONS FOR BABY ****************************/
 
     public void BabyHappyState()
     {
-        if (m_AudioEnabled)
+        if (m_AudioEnabled && m_BabyState != BabyState.HAPPY)
         {
             m_BabyState = BabyState.HAPPY;
             Debug.Log("BS: HAPPY");
@@ -1025,7 +993,7 @@ public class AudioManager : AudioEngine
 
     public void BabyUpsetState()
     {
-        if (m_AudioEnabled)
+        if (m_AudioEnabled && m_BabyState != BabyState.UPSET)
         {
             m_BabyState = BabyState.UPSET;
             Debug.Log("BS: UPSET");
@@ -1035,7 +1003,7 @@ public class AudioManager : AudioEngine
 
     public void BabyCryingState()
     {
-        if (m_AudioEnabled)
+        if (m_AudioEnabled && m_BabyState != BabyState.CRYING)
         {
             m_BabyState = BabyState.CRYING;
             Debug.Log("BS: CRYING");
@@ -1045,7 +1013,7 @@ public class AudioManager : AudioEngine
 
     public void BabyCalmingState()
     {
-        if (m_AudioEnabled)
+        if (m_AudioEnabled && m_BabyState != BabyState.CALMING)
         {               
             m_BabyState = BabyState.CALMING;
             Debug.Log("BS: CALMING");            
@@ -1054,7 +1022,7 @@ public class AudioManager : AudioEngine
 
     public void BabyNoState()
     {
-        if (m_AudioEnabled)
+        if (m_AudioEnabled && m_BabyState != BabyState.NO_BABY)
         {
             m_BabyState = BabyState.NO_BABY;
             Debug.Log("BS: NONE");
@@ -1079,7 +1047,7 @@ public class AudioManager : AudioEngine
 
     public void BabyFadeOut(float timeInterval)
     {
-        if (m_AudioEnabled)
+        if (m_AudioEnabled && m_BabyFadeOut != true)
         {
             m_BabyFadeOut = true;
             m_BabyFadeOutInterval = timeInterval;
@@ -1088,7 +1056,7 @@ public class AudioManager : AudioEngine
 
     #endregion
 
-    #region Heavenward Tides
+    /**************************** FUNCTIONS FOR HEAVENWARD TIDES ****************************/
 
     public void SetHeavenwardTidesVolume(float volume)
     {
@@ -1103,7 +1071,7 @@ public class AudioManager : AudioEngine
 
     public void HeavenwardTidesFadeInState(float volume, float timeInterval)
     {
-        if (m_AudioEnabled)
+        if (m_AudioEnabled && m_HTState != HeavenwardTidesState.FADE_IN)
         {
             m_HTState = HeavenwardTidesState.FADE_IN;
             Debug.Log("HWTS: FADE_IN");
@@ -1121,7 +1089,7 @@ public class AudioManager : AudioEngine
 
     public void HeavenwardTidesStaticState()
     {
-        if (m_AudioEnabled)
+        if (m_AudioEnabled && m_HTState != HeavenwardTidesState.STATIC)
         {
             m_HTState = HeavenwardTidesState.STATIC;
             Debug.Log("HWTS: STATIC");
@@ -1143,7 +1111,7 @@ public class AudioManager : AudioEngine
 
     public void HeavenwardTidesAttackState()
     {
-        if (m_AudioEnabled)
+        if (m_AudioEnabled && m_HTState != HeavenwardTidesState.ATTACK)
         {
             m_HTState = HeavenwardTidesState.ATTACK;
             Debug.Log("HWTS: ATTACK");
@@ -1162,7 +1130,7 @@ public class AudioManager : AudioEngine
 
     public void HeavenwardTidesNoState()
     {
-        if (m_AudioEnabled)
+        if (m_AudioEnabled && m_HTState = HeavenwardTidesState.NONE)
         {
             m_HTState = HeavenwardTidesState.NONE;
             Debug.Log("HWTS: NONE");
@@ -1183,7 +1151,7 @@ public class AudioManager : AudioEngine
 
     public void ThunderAmbianceStart()
     {
-        if (m_AudioEnabled)
+        if (m_AudioEnabled && m_ThunderActive != true)
         {
             m_ThunderActive = true;
         }
@@ -1191,7 +1159,7 @@ public class AudioManager : AudioEngine
 
     public void ThunderAmbianceStop()
     {
-        if (m_AudioEnabled)
+        if (m_AudioEnabled && m_ThunderActive != false)
         {
             if (IsPlaying("ThunderAmbiance"))
             {

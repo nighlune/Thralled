@@ -2,28 +2,35 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
+/*
+    This class is the base class of AudioManager which is the sound engine for thralled based on the Singleton design pattern. The AudioEngine instantiates the AudioFiles and uses dictionaries to manage which AudioFiles have been loaded and are in use. This class has functionality to load, play, pause, mute, fade-in/out, and set the volume for AudioFiles with the corresponding function to see if an AudioFile is already playing, is muted, is fading, etc.
+*/
 public class AudioEngine : MonoBehaviour
 {
+    // Max number of AudioFiles Thralled will used (used for the size of the dictionaries of AudioFiles)
     const int NUM_OF_AUDIOFILES = 200;
 
+    // Debug flag for printing to the console
     const bool m_DebugEnabled = false;
 
-    protected bool m_Mute;
+    // Flag for transitioning between different sound ambiances
     protected bool m_BeginTransition;
+
     protected float m_DeltaTime;
     protected float m_FadeInInterval;
     protected float m_FadeOutInterval;
     protected float m_TransitionTimer;
 
-    // Dictionary to hold all of the AudioFile script names with their corresponding prefab names
+    // Dictionary to hold all of the AudioFiles to be used in the game accessible by name. This is the master list of AudioFiles used in Thralled.
     protected Dictionary<string, AudioFile> m_CompleteAudioFilesList;
 
-    // Dictionary to hold all of the loaded AudioFiles
+    // Dictionary to hold all of the loaded AudioFiles. These are the AudioFiles that are instantiated.
     protected Dictionary<string, AudioFile> m_LoadedAudioFilesList;
 
-    // Dictionary to hold all of the AudioFiles to be removed on UnloadSounds() call
+    // List to hold the names of the AudioFiles to be removed on UnloadSounds() call
     protected List<string> m_AudioFilesToUnload;
 
+    // Used for initialization
     protected virtual void Awake()
     {
         m_CompleteAudioFilesList = new Dictionary<string, AudioFile>(NUM_OF_AUDIOFILES);
@@ -38,21 +45,26 @@ public class AudioEngine : MonoBehaviour
         m_BeginTransition = false;
     }
 
-	// Use this for initialization
+	// Used for when the script is enabled
 	protected virtual void Start() {}
 	
 	// Update is called once per frame
     void Update() {}
 
-    #region Loading
+    /**************************** FUNCTIONS FOR LOADING AUDIOFILES ****************************/
 
+    /*
+        This function loads an AudioFile creating a GameObject from its respective resource. The GameObject is instantiated and we set the AudioFile to the GameObject's component. We then load the AudioFIle into the LoadedAudioFilesList which is a dictionary mapping the AudioFile with its name (a string).
+    */
     public void Load(string name)
     {
+        // If the AudioFile has already been created it's in the LoadedAudioFilesList; we don't want to create it again
         if (m_LoadedAudioFilesList.ContainsKey(name))
         {
             if (m_DebugEnabled) print(name + " already loaded!");
         }
 
+        // If the AudioFile is in the CompleteAudioFilesList we don't want to create it again.
         else
         {
             if (!m_CompleteAudioFilesList.ContainsKey(name))
@@ -72,38 +84,6 @@ public class AudioEngine : MonoBehaviour
         }
     }
 
-    public void UnloadSounds()
-    {
-        /*
-        foreach (KeyValuePair<string, AudioFile> entry in m_LoadedAudioFilesList)
-        {
-            //if (entry.Value.GetType() != AudioType.PLAYER || entry.Value.GetType() != AudioType.MUSIC)
-            //{
-                m_AudioFilesToUnload.Add(entry.Key);
-            //}
-        }
-
-        for (int i = m_AudioFilesToUnload.Count - 1; i >= 0; --i)
-        {
-            if (IsPlaying(m_AudioFilesToUnload[i]))
-            {
-                Stop(m_AudioFilesToUnload[i]);
-            }
-
-            m_LoadedAudioFilesList.Remove(m_AudioFilesToUnload[i]);
-
-            Destroy(GameObject.Find(m_AudioFilesToUnload[i]));
-        }
-
-        if (m_AudioFilesToUnload.Count > 0)
-        {
-            m_AudioFilesToUnload.Clear();
-        }
-
-        if (m_DebugEnabled) print("Loaded AudioFiles: " + m_LoadedAudioFilesList.Count);
-        */
-    }
-
     protected bool IsLoaded(string name)
     {
         if (m_LoadedAudioFilesList != null)
@@ -119,9 +99,7 @@ public class AudioEngine : MonoBehaviour
         }
     }
 
-    #endregion
-
-    #region Volume
+    /**************************** FUNCTIONS FOR VOLUME ****************************/
 
     public float GetVolume(string mame)
     {
@@ -227,9 +205,7 @@ public class AudioEngine : MonoBehaviour
         }
     }
 
-    #endregion
-
-    #region Playback
+    /**************************** FUNCTIONS FOR PLAYBACK ****************************/
 
     // Sets the AudioSource's internal mute flag to true.
     public void Mute(string name)
@@ -832,9 +808,7 @@ public class AudioEngine : MonoBehaviour
         }
     }
 
-    #endregion
-
-    #region Fading
+    /**************************** FUNCTIONS FOR FADING AUDIOFILES IN AND OUT ****************************/
 
     public void EnableFading(string name)
     {
@@ -969,9 +943,9 @@ public class AudioEngine : MonoBehaviour
 
     #endregion
 
-    #region Engine
+    /**************************** AUDIOENGINE FUNCTIONS ****************************/
 
-    // Function to return an interval of time between two values (in seconds).
+    // Function to return a random interval of time between two values (in seconds).
     protected float GetInterval(int lowerBound, int upperBound)
     {
         return (float)Random.Range(lowerBound, upperBound + 1);
