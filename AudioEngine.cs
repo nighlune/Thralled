@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 
 /*
-    This class is the base class of AudioManager which is the sound engine for thralled based on the Singleton design pattern. The AudioEngine instantiates the AudioFiles and uses dictionaries to manage which AudioFiles have been loaded and are in use. This class has functionality to load, play, pause, mute, fade-in/out, and set the volume for AudioFiles with the corresponding function to see if an AudioFile is already playing, is muted, is fading, etc.
+    This class is the base class of AudioManager which is the sound engine for Thralled based on the Singleton design pattern. The AudioEngine instantiates the AudioFiles and uses dictionaries to manage which AudioFiles have been loaded and are in use. This class has functionality to load, play, pause, mute, fade-in/out, and set the volume for AudioFiles with corresponding functions to see if an AudioFile is already playing, is muted, is fading, etc.
 */
 public class AudioEngine : MonoBehaviour
 {
@@ -54,29 +54,37 @@ public class AudioEngine : MonoBehaviour
     /**************************** FUNCTIONS FOR LOADING AUDIOFILES ****************************/
 
     /*
-        This function loads an AudioFile creating a GameObject from its respective resource. The GameObject is instantiated and we set the AudioFile to the GameObject's component. We then load the AudioFIle into the LoadedAudioFilesList which is a dictionary mapping the AudioFile with its name (a string).
+        This function loads an AudioFile creating a GameObject from its respective resource. The GameObject is instantiated and we set the AudioFile to the GameObject's component. We then load the AudioFile into the LoadedAudioFilesList which is a dictionary mapping the AudioFile with its name (a string). Loading an AudioFile is necessary for it to be used in Thralled. Loading the object here has the same definition as instantiating the object based off of the object's pre-existing prefab.
     */
     public void Load(string name)
     {
-        // If the AudioFile has already been created it's in the LoadedAudioFilesList; we don't want to create it again
+        // If the AudioFile has already been loaded it's in the LoadedAudioFilesList; we don't want to load it again
         if (m_LoadedAudioFilesList.ContainsKey(name))
         {
             if (m_DebugEnabled) print(name + " already loaded!");
         }
 
-        // If the AudioFile is in the CompleteAudioFilesList we don't want to create it again.
         else
         {
+            // If the AudioFile doesn't exist for us to load
             if (!m_CompleteAudioFilesList.ContainsKey(name))
             {
                 if (m_DebugEnabled) print(name + " not found!");
             }
 
+            // Load the AudioFile, i.e. instantiate it
             else
             {
+                // Create the prefab of the AudioFile from the resource's GameObject
                 GameObject audioFilePrefab = (GameObject)Resources.Load(name);
+
+                // Instantiate the GameObject using the prefab
                 GameObject temp = (GameObject)Instantiate(audioFilePrefab);
+
+                // Create the AudioFile boject from the GameObject's AudioFile component
                 AudioFile audioFile = temp.GetComponent<AudioFile>();
+
+                // Add the AudioFile to the list of loaded AudioFiles
                 m_LoadedAudioFilesList.Add(name, audioFile);
 
                 if (m_DebugEnabled) print(name + " is loaded.");
@@ -84,10 +92,13 @@ public class AudioEngine : MonoBehaviour
         }
     }
 
+    // Returns whether or not an AudioFile has been loaded, i.e. exists in the dictionary of Loaded AudioFiles
     protected bool IsLoaded(string name)
     {
+        // If the list of loaded AudioFiles exists
         if (m_LoadedAudioFilesList != null)
         {
+            // Return whether or not the AudioFile exists in the list of loaded AudioFiles
             return m_LoadedAudioFilesList.ContainsKey(name);
         }
 
@@ -101,10 +112,13 @@ public class AudioEngine : MonoBehaviour
 
     /**************************** FUNCTIONS FOR VOLUME ****************************/
 
+    // Returns the volume of the AudioFile
     public float GetVolume(string mame)
     {
+        // If the AudioFile has been loaded
         if (IsLoaded(name))
         {
+            // Return it's volume
             return m_LoadedAudioFilesList[name].GetVolume();
         }
 
@@ -116,10 +130,12 @@ public class AudioEngine : MonoBehaviour
         }
     }
 
+    // Sets the AudioFile's AudioSource volume
     public void SetVolume(string name, float volume)
     {
         if (IsLoaded(name))
         {
+            // Set the volume of the AudioFile
             m_LoadedAudioFilesList[name].SetVolume(volume);
         }
 
@@ -129,6 +145,7 @@ public class AudioEngine : MonoBehaviour
         }
     }
 
+    // Returns the default volume of the AudioFile
     public float GetDefaultVolume(string name)
     {
         if (IsLoaded(name))
@@ -143,6 +160,7 @@ public class AudioEngine : MonoBehaviour
         }
     }
 
+    // Sets the default volume of the AudioFile
     public void SetDefaultVolume(string name, float volume)
     {
         if (IsLoaded(name))
@@ -156,6 +174,7 @@ public class AudioEngine : MonoBehaviour
         }
     }
 
+    // Returns the current volume of a specific AudioSource (layer) of the AudioFile
     public float GetLayerVolume(string name, int layer)
     {
         if (IsLoaded(name))
@@ -171,6 +190,7 @@ public class AudioEngine : MonoBehaviour
         }
     }
 
+    // Sets the volume of a specific AudioSource (layer) of the AudioFile
     public void SetLayerVolume(string name, int layer, float volume)
     {
         if (IsLoaded(name))
@@ -184,6 +204,7 @@ public class AudioEngine : MonoBehaviour
         }
     }
 
+    // Resets the volume of the AudioFile to its default volume
     public void ResetVolume(string name)
     {
         if (IsLoaded(name))
@@ -197,6 +218,7 @@ public class AudioEngine : MonoBehaviour
         }
     }
 
+    // Resets the volume of every loaded AudioFile to its default volume
     public void ResetAllVolumes()
     {
         foreach (KeyValuePair<string, AudioFile> entry in m_LoadedAudioFilesList)
@@ -235,7 +257,7 @@ public class AudioEngine : MonoBehaviour
         }
     }
 
-    // Returns the current mute value of the AudioSource.
+    // Returns the current value of the AudioFile's AudioSources' mute flags (true if any are muted, false otherwise)
     public bool IsMuted(string name)
     {
         if (IsLoaded(name))
@@ -251,6 +273,7 @@ public class AudioEngine : MonoBehaviour
         }
     }
 
+    // Mutes all of the loaded AudioFiles
     public void MuteAll()
     {
         foreach (KeyValuePair<string, AudioFile> entry in m_LoadedAudioFilesList)
@@ -259,6 +282,7 @@ public class AudioEngine : MonoBehaviour
         }
     }
 
+    // Unmutes all of the loaded AudioFiles
     public void UnMuteAll()
     {
         foreach (KeyValuePair<string, AudioFile> entry in m_LoadedAudioFilesList)
@@ -267,7 +291,7 @@ public class AudioEngine : MonoBehaviour
         }
     }
 
-    // Stops the AudioSource from playing.
+    // Stops the AudioFile's AudioSource(s) from playing
     public void Stop(string name)
     {
         if (IsLoaded(name))
@@ -281,7 +305,7 @@ public class AudioEngine : MonoBehaviour
         }
     }
 
-    // Stops the specific layer.
+    // Stops the specific AudioSource (layer) of the AudioFile
     public void StopLayer(string name, int layer)
     {
         if (IsLoaded(name))
@@ -295,6 +319,7 @@ public class AudioEngine : MonoBehaviour
         }
     }
 
+    // Stops all of the AudioSources of all of the loaded AudioFiles
     public void StopAllSounds()
     {
         foreach (KeyValuePair<string, AudioFile> entry in m_LoadedAudioFilesList)
@@ -303,137 +328,47 @@ public class AudioEngine : MonoBehaviour
         }
     }
 
-    // Plays the AudioSource.
+    // Plays the AudioFile's AudioSource
     public void Play(string name)
     {
-        if (IsLoaded(name))
-        {
-            m_LoadedAudioFilesList[name].Play();
-        }
+        Load(name);
 
-        else
-        {
-            if (!m_CompleteAudioFilesList.ContainsKey(name))
-            {
-                if (m_DebugEnabled) print("Play(): " + name + " not found!");
-            }
-
-            else
-            {
-                GameObject audioFilePrefab = (GameObject)Resources.Load(name);
-                GameObject temp = (GameObject)Instantiate(audioFilePrefab);
-                AudioFile audioFile = temp.GetComponent<AudioFile>();
-                m_LoadedAudioFilesList.Add(name, audioFile);
-                audioFile.Play();
-            }
-        }
+        m_LoadedAudioFilesList[name].Play();
     }
 
-    // Plays the AudioSource at a specific volume.
+    // Plays the AudioFile's AudioSource at a specific volume
     public void Play(string name, float volume)
     {
-        if (IsLoaded(name))
-        {
-            m_LoadedAudioFilesList[name].Play(volume);
-        }
+        Load(name);
 
-        else
-        {
-            if (!m_CompleteAudioFilesList.ContainsKey(name))
-            {
-                if (m_DebugEnabled) print("Play(): " + name + " not found!");
-            }
-
-            else
-            {
-                GameObject audioFilePrefab = (GameObject)Resources.Load(name);
-                GameObject temp = (GameObject)Instantiate(audioFilePrefab);
-                AudioFile audioFile = temp.GetComponent<AudioFile>();
-                m_LoadedAudioFilesList.Add(name, audioFile);
-                audioFile.Play(volume);
-            }
-        }
+        m_LoadedAudioFilesList[name].Play(volume);
     }
 
-    // Plays a particular AudioSource layer.
+    // Plays a particular AudioSource (layer) of an AudioFile
     public void PlayLayer(string name, int layer)
     {
-        if (IsLoaded(name))
-        {
-            m_LoadedAudioFilesList[name].PlayLayer(layer);
-        }
+        Load(name);
 
-        else
-        {
-            if (!m_CompleteAudioFilesList.ContainsKey(name))
-            {
-                if (m_DebugEnabled) print("PlayLayer(): " + name + " not found!");
-            }
-
-            else
-            {
-                GameObject audioFilePrefab = (GameObject)Resources.Load(name);
-                GameObject temp = (GameObject)Instantiate(audioFilePrefab);
-                AudioFile audioFile = temp.GetComponent<AudioFile>();
-                m_LoadedAudioFilesList.Add(name, audioFile);
-                audioFile.PlayLayer(layer);
-            }
-        }
+        m_LoadedAudioFilesList[name].PlayLayer(layer);
     }
 
-    // Plays a particular AudioSource layer at a specific volume.
+    // Plays a particular AudioSource (layer) of an AudioFile at a specific volume
     public void PlayLayer(string name, int layer, float volume)
     {
-        if (IsLoaded(name))
-        {
-            m_LoadedAudioFilesList[name].PlayLayer(layer, volume);
-        }
+        Load(name);
 
-        else
-        {
-            if (!m_CompleteAudioFilesList.ContainsKey(name))
-            {
-                if (m_DebugEnabled) print("PlayLayer(): " + name + " not found!");
-            }
-
-            else
-            {
-                GameObject audioFilePrefab = (GameObject)Resources.Load(name);
-                GameObject temp = (GameObject)Instantiate(audioFilePrefab);
-                AudioFile audioFile = temp.GetComponent<AudioFile>();
-                m_LoadedAudioFilesList.Add(name, audioFile);
-                audioFile.PlayLayer(layer, volume);
-            }
-        }
+        m_LoadedAudioFilesList[name].PlayLayer(layer, volume);
     }
 
-    // Plays the AudioSource from a specific time.
+    // Plays the AudioSource from a specific time
     public void PlayFromTime(string name, float time)
     {
-        if (IsLoaded(name))
-        {
-            m_LoadedAudioFilesList[name].PlayFromTime(time);
-        }
+        Load(name);
 
-        else
-        {
-            if (!m_CompleteAudioFilesList.ContainsKey(name))
-            {
-                if (m_DebugEnabled) print("PlayFromTime(): " + name + " not found!");
-            }
-
-            else
-            {
-                GameObject audioFilePrefab = (GameObject)Resources.Load(name);
-                GameObject temp = (GameObject)Instantiate(audioFilePrefab);
-                AudioFile audioFile = temp.GetComponent<AudioFile>();
-                m_LoadedAudioFilesList.Add(name, audioFile);
-                audioFile.PlayFromTime(time);
-            }
-        }
+        m_LoadedAudioFilesList[name].PlayFromTime(time);
     }
 
-    // Plays the AudioSource from a specific time from a specific volume.
+    // Plays the AudioSource from a specific time from a specific volume
     public void PlayFromTime(string name, float time, float volume)
     {
         SetVolume(name, volume);
@@ -441,33 +376,15 @@ public class AudioEngine : MonoBehaviour
         PlayFromTime(name, time);
     }
 
-    // Plays a particular layer from a specific time.
+    // Plays a particular AudioSource (layer) from a specific time
     public void PlayLayerFromTime(string name, int layer, float time)
     {
-        if (IsLoaded(name))
-        {
-            m_LoadedAudioFilesList[name].PlayLayerFromTime(layer, time);
-        }
+        Load(name);
 
-        else
-        {
-            if (!m_CompleteAudioFilesList.ContainsKey(name))
-            {
-                if (m_DebugEnabled) print("PlayLayerFromTime(): " + name + " not found!");
-            }
-
-            else
-            {
-                GameObject audioFilePrefab = (GameObject)Resources.Load(name);
-                GameObject temp = (GameObject)Instantiate(audioFilePrefab);
-                AudioFile audioFile = temp.GetComponent<AudioFile>();
-                m_LoadedAudioFilesList.Add(name, audioFile);
-                audioFile.PlayLayerFromTime(layer, time);
-            }
-        }
+        m_LoadedAudioFilesList[name].PlayLayerFromTime(layer, time);
     }
 
-    // Players a particular layer from a specific time from a specific volume.
+    // Players a particular AudioSource (layer) from a specific time from a specific volume
     public void PlayLayerFromTime(string name, int layer, float time, float volume)
     {
         SetVolume(name, volume);
@@ -475,7 +392,7 @@ public class AudioEngine : MonoBehaviour
         PlayLayerFromTime(name, layer, time);
     }
 
-    // Returns whether the AudioSource(s) are playing.
+    // Returns whether the AudioSource(s) are playing
     public List<bool> ArePlaying(string name)
     {
         if (IsLoaded(name))
@@ -491,7 +408,7 @@ public class AudioEngine : MonoBehaviour
         }
     }
 
-    // Returns whether the AudioSource(s) are playing.
+    // Returns whether the AudioSource is playing
     public bool IsPlaying(string name)
     {
         if (IsLoaded(name))
@@ -507,7 +424,7 @@ public class AudioEngine : MonoBehaviour
         }
     }
 
-    // Returns whether a specific layer is playing.
+    // Returns whether a specific AudioSource (layer) is playing
     public bool IsLayerPlaying(string name, int layer)
     {
         if (IsLoaded(name))
@@ -523,85 +440,31 @@ public class AudioEngine : MonoBehaviour
         }
     }
 
-    // Plays the AudioSource, looping the sound.
+    // Plays the AudioSource, looping the sound
     public void LoopPlay(string name)
     {
-        if (IsLoaded(name))
-        {
-            m_LoadedAudioFilesList[name].LoopPlay();
-        }
+        Load(name);
 
-        else
-        {
-            if (!m_CompleteAudioFilesList.ContainsKey(name))
-            {
-                if (m_DebugEnabled) print("LoopPlay(): " + name + " not found!");
-            }
-
-            else
-            {
-                GameObject audioFilePrefab = (GameObject)Resources.Load(name);
-                GameObject temp = (GameObject)Instantiate(audioFilePrefab);
-                AudioFile audioFile = temp.GetComponent<AudioFile>();
-                m_LoadedAudioFilesList.Add(name, audioFile);
-                audioFile.LoopPlay();
-            }
-        }
+        m_LoadedAudioFilesList[name].LoopPlay();
     }
 
-    // Plays the AudioSource at a specific volume, looping the sound.
+    // Plays the AudioSource at a specific volume, looping the sound
     public void LoopPlay(string name, float volume)
     {
-        if (IsLoaded(name))
-        {
-            m_LoadedAudioFilesList[name].LoopPlay(volume);
-        }
+        Load(name);
 
-        else
-        {
-            if (!m_CompleteAudioFilesList.ContainsKey(name))
-            {
-                if (m_DebugEnabled) print("LoopPlay(): " + name + " not found!");
-            }
-
-            else
-            {
-                GameObject audioFilePrefab = (GameObject)Resources.Load(name);
-                GameObject temp = (GameObject)Instantiate(audioFilePrefab);
-                AudioFile audioFile = temp.GetComponent<AudioFile>();
-                m_LoadedAudioFilesList.Add(name, audioFile);
-                audioFile.LoopPlay(volume);
-            }
-        }
+        m_LoadedAudioFilesList[name].LoopPlay(volume);
     }
 
-    // Plays the AudioSource from a specific time, looping the sound.
+    // Plays the AudioSource from a specific time, looping the sound
     public void LoopPlayFromTime(string name, float time)
     {
-        if (IsLoaded(name))
-        {
-            m_LoadedAudioFilesList[name].LoopPlayFromTime(time);
-        }
+        Load(name);
 
-        else
-        {
-            if (!m_CompleteAudioFilesList.ContainsKey(name))
-            {
-                if (m_DebugEnabled) print("LoopPlay(): " + name + " not found!");
-            }
-
-            else
-            {
-                GameObject audioFilePrefab = (GameObject)Resources.Load(name);
-                GameObject temp = (GameObject)Instantiate(audioFilePrefab);
-                AudioFile audioFile = temp.GetComponent<AudioFile>();
-                m_LoadedAudioFilesList.Add(name, audioFile);
-                audioFile.LoopPlayFromTime(time);
-            }
-        }
+        m_LoadedAudioFilesList[name].LoopPlayFromTime(time);
     }
 
-    // Plays the AudioSource from a specific time and volume, looping the sound.
+    // Plays the AudioSource from a specific time and volume, looping the sound
     public void LoopPlayFromTime(string name, float time, float volume)
     {
         SetVolume(name, volume);
@@ -609,92 +472,39 @@ public class AudioEngine : MonoBehaviour
         LoopPlayFromTime(name, time);
     }
 
-    // Plays a specific layer, looping the sound.
+    // Plays a specific AudioSource (layer), looping the sound
     public void LoopPlayLayer(string name, int layer)
     {
-        if (IsLoaded(name))
-        {
-            m_LoadedAudioFilesList[name].LoopPlayLayer(layer);
-        }
+        Load(name);
 
-        else
-        {
-            if (!m_CompleteAudioFilesList.ContainsKey(name))
-            {
-                if (m_DebugEnabled) print("LoopPlayLayer(): " + name + " not found!");
-            }
-
-            else
-            {
-                GameObject audioFilePrefab = (GameObject)Resources.Load(name);
-                GameObject temp = (GameObject)Instantiate(audioFilePrefab);
-                AudioFile audioFile = temp.GetComponent<AudioFile>();
-                m_LoadedAudioFilesList.Add(name, audioFile);
-                audioFile.LoopPlayLayer(layer);
-            }
-        }
+        m_LoadedAudioFilesList[name].LoopPlayLayer(layer);
     }
 
-    // Plays a specific layer at a specific volume, looping the sound.
+    // Plays a specific AudioSource (layer) at a specific volume, looping the sound
     public void LoopPlayLayer(string name, int layer, float volume)
     {
-        if (IsLoaded(name))
-        {
-            m_LoadedAudioFilesList[name].LoopPlayLayer(layer, volume);
-        }
+        Load(name);
 
-        else
-        {
-            if (!m_CompleteAudioFilesList.ContainsKey(name))
-            {
-                if (m_DebugEnabled) print("LoopPlayLayer(): " + name + " not found!");
-            }
-
-            else
-            {
-                GameObject audioFilePrefab = (GameObject)Resources.Load(name);
-                GameObject temp = (GameObject)Instantiate(audioFilePrefab);
-                AudioFile audioFile = temp.GetComponent<AudioFile>();
-                m_LoadedAudioFilesList.Add(name, audioFile);
-                audioFile.LoopPlayLayer(layer, volume);
-            }
-        }
+        m_LoadedAudioFilesList[name].LoopPlayLayer(layer, volume);
     }
 
-    // Plays a specific layer from a specific time.
+    // Plays a specific AudioSource (layer) from a specific time
     public void LoopPlayLayerFromTime(string name, int layer, float time)
     {
-        if (IsLoaded(name))
-        {
-            m_LoadedAudioFilesList[name].LoopPlayLayerFromTime(layer, time);
-        }
+        Load(name);
 
-        else
-        {
-            if (!m_CompleteAudioFilesList.ContainsKey(name))
-            {
-                if (m_DebugEnabled) print("LoopPlayLayerFromTime(): " + name + " not found!");
-            }
-
-            else
-            {
-                GameObject audioFilePrefab = (GameObject)Resources.Load(name);
-                GameObject temp = (GameObject)Instantiate(audioFilePrefab);
-                AudioFile audioFile = temp.GetComponent<AudioFile>();
-                m_LoadedAudioFilesList.Add(name, audioFile);
-                audioFile.LoopPlayLayerFromTime(layer, time);
-            }
-        }
+        m_LoadedAudioFilesList[name].LoopPlayLayerFromTime(layer, time);
     }
 
-    // Plays a specific layer from a specific time at a specific volume.
+    // Plays a specific AudioSource (layer) from a specific time at a specific volume
     public void LoopPlayLayerFromTime(string name, int layer, float time, float volume)
     {
         SetVolume(name, volume);
+
         LoopPlayLayerFromTime(name, layer, time);
     }
 
-    // Sets looping to true.
+    // Sets the AudioFile's looping flag to true
     public void Loop(string name)
     {
         if (IsLoaded(name))
@@ -708,7 +518,7 @@ public class AudioEngine : MonoBehaviour
         }
     }
 
-    // Sets a layer to loop.
+    // Sets an AudioSource (layer) to loop
     public void LoopLayer(string name, int layer)
     {
         if (IsLoaded(name))
@@ -722,7 +532,7 @@ public class AudioEngine : MonoBehaviour
         }
     }
 
-    // Sets looping to false.
+    // Sets the AudioFile's looping flag to false
     public void StopLooping(string name)
     {
         if (IsLoaded(name))
@@ -736,7 +546,7 @@ public class AudioEngine : MonoBehaviour
         }
     }
 
-    // Sets a layer to stop looping.
+    // Sets an AudioSource (layer) to stop looping
     public void StopLoopingLayer(string name, int layer)
     {
         if (IsLoaded(name))
@@ -750,7 +560,7 @@ public class AudioEngine : MonoBehaviour
         }
     }
 
-    // Returns the time that the AudioSource(s) are currently playing at.
+    // Returns the times that the AudioSources are currently playing at
     public List<float> GetTimes(string name)
     {
         if (IsLoaded(name))
@@ -765,6 +575,7 @@ public class AudioEngine : MonoBehaviour
         }
     }
 
+    // Returns the time the AudioSource is playing at
     public float GetTime(string name)
     {
         if (IsLoaded(name))
@@ -779,7 +590,7 @@ public class AudioEngine : MonoBehaviour
         }
     }
 
-    // Returns the time that a specific layer is currently playing at.
+    // Returns the time that a specific AudioSource (layer) is currently playing at
     public float GetLayerTime(string name, int layer)
     {
         if (IsLoaded(name))
@@ -794,6 +605,7 @@ public class AudioEngine : MonoBehaviour
         }
     }
 
+    // Returns the length (or runtime) of the AudioFile's AudioClip
     public float GetRuntime(string name)
     {
         if (IsLoaded(name))
@@ -810,6 +622,7 @@ public class AudioEngine : MonoBehaviour
 
     /**************************** FUNCTIONS FOR FADING AUDIOFILES IN AND OUT ****************************/
 
+    // Set's the AudioFile's fade flag to true to enable fading for the AudioFile's AudioSource
     public void EnableFading(string name)
     {
         if (IsLoaded(name))
@@ -823,6 +636,7 @@ public class AudioEngine : MonoBehaviour
         }
     }
 
+    // Set's the AudioFile's fade flag to false to disable fading for the AudioFile's AudioSource
     public void DisableFading(string name)
     {
         if (IsLoaded(name))
@@ -836,6 +650,7 @@ public class AudioEngine : MonoBehaviour
         }
     }
 
+    // Returns whether or not fading is enabled for the AudioFile
     public bool IsFadingEnabled(string name)
     {
         if (IsLoaded(name))
@@ -850,6 +665,7 @@ public class AudioEngine : MonoBehaviour
         }
     }
 
+    // Sets the AudioFile to fade in over a specified time interval
     public void FadeIn(string name, float timeInterval)
     {
         if (IsLoaded(name))
@@ -863,6 +679,7 @@ public class AudioEngine : MonoBehaviour
         }
     }
 
+    // Sets the AudioFile to fade in over a specified time interval to a specified volume
     public void FadeInToVolume(string name, float timeInterval, float volume)
     {
         if (IsLoaded(name))
@@ -876,6 +693,7 @@ public class AudioEngine : MonoBehaviour
         }
     }
 
+    // Fade in all AudioFiles from 0 volume to their default volume over a specified time interval
     public void FadeInAllSounds(float timeInterval)
     {
         foreach (KeyValuePair<string, AudioFile> entry in m_LoadedAudioFilesList)
@@ -884,6 +702,7 @@ public class AudioEngine : MonoBehaviour
         }
     }
     
+    // Fade out an AudioFile to a specified volume (defaulted to 0 volume) over a specified time interval
     public void FadeOut(string name, float timeInterval, float minVolume = 0)
     {
         if (IsLoaded(name))
@@ -897,6 +716,7 @@ public class AudioEngine : MonoBehaviour
         }
     }
 
+    // Fade out an AudioFile to a specified volume (defaulted to 0 volume) over a specified time interval and stop the AudioFile when the volume reaches the minimum volume
     public void FadeOutToStop(string name, float timeInterval, float minVolume = 0)
     {
         if (IsLoaded(name))
@@ -910,18 +730,23 @@ public class AudioEngine : MonoBehaviour
         }
     }
 
+    // Begin playing an AudioFile with a gradual fade in to its default volume over a specified time interval
     public void PlayWithFadeIn(string name, float timeInterval)
     {
         Play(name);
+
         FadeIn(name, timeInterval);
     }
 
+    // Begin playing an AudioFile with a gradual fade in to a specified volume over a specific time interval
     public void PlayWithFadeInToVolume(string name, float timeInterval, float volume)
     {
         Play(name);
+
         FadeInToVolume(name, timeInterval, volume);
     }
 
+    // Begin playing an AudioFile with a gradual fade in over a specified time interval from a specific time of the AudioClip
     public void PlayWithFadeInFromTime(string name, float timeInterval, float time)
     {
         if (IsLoaded(name))
@@ -935,13 +760,13 @@ public class AudioEngine : MonoBehaviour
         }
     }
 
+    // Begin playing an AudioFile with a gradual fade in over a specified time interval from a specific time of the AudioClip, fading in to a specified volume
     public void PlayWithFadeInFromTime(string name, float timeInterval, float time, float volume)
     {
         SetVolume(name, volume);
+
         PlayWithFadeInFromTime(name, timeInterval, time);
     }
-
-    #endregion
 
     /**************************** AUDIOENGINE FUNCTIONS ****************************/
 
@@ -971,6 +796,4 @@ public class AudioEngine : MonoBehaviour
             return 0;
         }
     }
-
-    #endregion
 }

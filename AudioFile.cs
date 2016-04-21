@@ -23,19 +23,16 @@ public class AudioFile : MonoBehaviour
     // List of AudioClips
     private List<AudioClip> m_AudioClips;
 
-    // Specific attributes affecting the AudioFile
-    private float m_MinFadeOutVolume;
-    private float m_FadeToVolume;
-    private float m_TimeInterval;
-	private float m_currentVolume;
-
+    // Specific attributes affecting the fading functionality of the AudioFile
+    private float m_MinFadeOutVolume; // Minimum volume we want to fade to
+    private float m_FadeToVolume; // Volume to fade to
+    private float m_TimeInterval; // Time interval for fading
+	
     // Booleans to keep track of the state of the AudioFile
-    private bool m_FadeIn;
-    private bool m_FadeInLayer;
-    private bool m_FadeOut;
-    private bool m_FadeOutLayer;
-    private bool m_FadeEnabled;
-    private bool m_FadeToStop;
+    private bool m_FadeIn; // Set the AudioFile to fade-in 
+    private bool m_FadeOut; // Set the AudioFile to fade-out
+    private bool m_FadeEnabled; // Whether faiding is enabled
+    private bool m_FadeToStop; // Whether to fade to stop or fade and remain playing AudioFile
 
     // The type of AudioFile
     // Ideally this would be abstracted from the AudioFile as this is game-specific
@@ -45,8 +42,9 @@ public class AudioFile : MonoBehaviour
     public List<string> m_FilePaths;    
     
     // Variables for the volume of the AudioFile
-    public float m_InitialVolume;
-    public float m_DefaultVolume;
+    public float m_InitialVolume; // AudioFile's initial volume
+    public float m_DefaultVolume; // AudioFile's default volume
+    private float m_CurrentVolume; // AudioFile's current volume
 
 	// Used for initialization
 	void Awake()
@@ -86,6 +84,7 @@ public class AudioFile : MonoBehaviour
                 tempSource.transform.parent = tempAudioManager.transform;
             }
 
+            // Add the AudioClip and AudioSource to the AudioFile
             m_AudioClips.Add(tempClip);
             m_AudioSources.Add(tempSource);
         }
@@ -110,7 +109,7 @@ public class AudioFile : MonoBehaviour
                 if (m_AudioSources[i].volume < m_FadeToVolume)
                 {
                     // Calculate the volume we should be playing at
-                    float currentVolume = m_AudioSources[i].volume + (Time.deltaTime / (m_TimeInterval + 1)) * (m_FadeToVolume - m_currentVolume);
+                    float currentVolume = m_AudioSources[i].volume + (Time.deltaTime / (m_TimeInterval + 1)) * (m_FadeToVolume - m_CurrentVolume);
                     m_AudioSources[i].volume = currentVolume;
                 }
 
@@ -141,8 +140,8 @@ public class AudioFile : MonoBehaviour
                 if (m_AudioSources[i].volume > m_MinFadeOutVolume)
                 {
                     // Calculate the volume we should be playing at
-                    float currentVolume = m_AudioSources[i].volume - (Time.deltaTime / (m_TimeInterval + 1)) * (-m_MinFadeOutVolume + m_currentVolume);
-                    m_AudioSources[i].volume = currentVolume;
+                    float currentVolume = m_AudioSources[i].volume - (Time.deltaTime / (m_TimeInterval + 1)) * (-m_MinFadeOutVolume + m_CurrentVolume);
+                    m_AudioSources[i].volume = CurrentVolume;
                 }
 
                 // If we've reached the volume that we're fading TO
@@ -205,8 +204,10 @@ public class AudioFile : MonoBehaviour
     // Sets the AudioFile's current volume
     public void SetVolume(float volume)
     {
+        // For each AudioSource in the AudioFile
         for (int i = 0; i < m_AudioSources.Count; ++i)
         {
+            // If the desired volume does not exceed the default volume
             if (volume <= m_DefaultVolume)
             {
                 // Set each AudioSource to the desired volume
@@ -298,7 +299,7 @@ public class AudioFile : MonoBehaviour
         }
     }
 
-    // Returns the current mute value of the AudioSource. If any of the AudioSources is muted this function returns true.
+    // Returns the current mute value of the AudioSource. If any of the AudioSources is muted this function returns true, otherwise it returns false
     public bool IsMuted()
     {
         bool isMuted = false;
@@ -338,6 +339,7 @@ public class AudioFile : MonoBehaviour
                 m_AudioSources[i].Stop();
             }
 
+            // If the AudioSource has been set to loop, stop looping
             if (m_AudioSources[i].loop)
             {
                 m_AudioSources[i].loop = false;
@@ -759,7 +761,7 @@ public class AudioFile : MonoBehaviour
 			m_FadeToVolume = m_DefaultVolume;
 
             // Set the current volume to the AudioSource's current volume
-			m_currentVolume = m_AudioSources[0].volume;
+			m_CurrentVolume = m_AudioSources[0].volume;
         }
     }
 
@@ -772,7 +774,7 @@ public class AudioFile : MonoBehaviour
             m_TimeInterval = timeInterval;
             m_FadeOut = false;
             m_FadeIn = true;
-			m_currentVolume = m_AudioSources[0].volume;
+			m_CurrentVolume = m_AudioSources[0].volume;
         }
     }
 
@@ -791,7 +793,7 @@ public class AudioFile : MonoBehaviour
                 m_MinFadeOutVolume = 0.0f;
             }
 
-            m_currentVolume = m_AudioSources[0].volume;
+            m_CurrentVolume = m_AudioSources[0].volume;
             m_TimeInterval = timeInterval;
             m_FadeIn = false;
             m_FadeOut = true;
