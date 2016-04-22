@@ -10,7 +10,7 @@ public class AudioEngine : MonoBehaviour
     // Max number of AudioFiles Thralled will used (used for the size of the dictionaries of AudioFiles)
     const int NUM_OF_AUDIOFILES = 200;
 
-    // Debug flag for printing to the console
+    // Debug flag for printing error messages to the console
     const bool m_DebugEnabled = false;
 
     // Flag for transitioning between different sound ambiances

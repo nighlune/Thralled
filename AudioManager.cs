@@ -3,19 +3,23 @@ using System.Collections;
 using System.Collections.Generic;
 
 /*
-
+    This class extends the functionality of the AudioEngine class using it as a Singleton design pattern. This ensure that this class persists until the application is terminated, allowing sounds and music to play regardless of screen, frame, stage, etc. In this class are all the variables that will be represented by each AudioFile for all of the objects, scenes, ambiant sounds, music, etc. that are used in Thralled. These variables as AudioFiles each have their accompanying variables related to timers and timer intervals, volumes, upper and lower bounds for volumes, etc, and booleans for different states reflecting sounds that are active or inactive.
 */
 public class AudioManager : AudioEngine
 {
+    // Our flag to enable or disable the audio
     private bool m_AudioEnabled = true;
 
     /**************************** SINGLETON ****************************
     Code that causes the AudioManager to be a Singleton pattern in Unity3D
     ********************************************************************/
+
     private static AudioManager instance;
 
+    // Our reference to the AudioManager Singleton
     public static AudioManager Instance
     {
+        // When invoking the AudioManager, this function is called, i.e. AudioManager.Instance.... If the AudioManager has not be created, it will be instantiated when it's invoked, otherwise it will return itself.
         get
         {
             if (instance == null)
@@ -27,27 +31,23 @@ public class AudioManager : AudioEngine
         }
     }
 
+    // Destroy this object on application quit
     public void OnApplicationQuit()
     {
         instance = null;
     }
 
+    // Used for initialization
     void Awake()
     {
+        // When loading a new level all objects in the scene are destroyed, then the objects in the new level are loaded. In order to preserve an object during level loading call DontDestroyOnLoad on it. If the object is a component or game object then its entire transform hierarchy will not be destroyed either.
         DontDestroyOnLoad(this);
 
         base.Awake();
     }
     /**************************** END SINGLETON ****************************/
 
-    private GameObject m_CurrentMusicPrefab;
-    public GameObject currentMusicPrefab
-    {
-        get { return m_CurrentMusicPrefab; }
-        set { m_CurrentMusicPrefab = value; }
-    }
-
-    // Baby sound variables
+    /**************************** BABY SOUND VARIABLES ****************************/
     private float m_BabyCryVolume;
     private float m_BabyCalmTimer;
     private float m_BabyCalmInterval;
@@ -62,11 +62,13 @@ public class AudioManager : AudioEngine
     private float m_BabyCryMinVolume;  
     private float m_BabyCryVolumeIncrement;
     private float m_BabyCryVolumeUpperBound;
-    private float m_BabyCryVolumeLowerBound;  
+    private float m_BabyCryVolumeLowerBound;
+
     private int m_BabyHappyUpperBound;
     private int m_BabyHappyLowerBound;
     private int m_BabyCryUpperBound;
-    private int m_BabyCryLowerBound;    
+    private int m_BabyCryLowerBound;
+
     private bool m_BabyCalmingStateTriggered;
     private bool m_BabyFadeOut;
 
@@ -81,7 +83,7 @@ public class AudioManager : AudioEngine
     };
     private BabyState m_BabyState = BabyState.NO_BABY;
 
-    // Ambiance sound variables
+    /**************************** AMBIANCE SOUND VARIABLES ****************************/
     private float m_CricketsTimer1;
     private float m_CricketsTimer2;
     private float m_CricketsInterval1;
@@ -136,6 +138,7 @@ public class AudioManager : AudioEngine
     private bool m_ThunderActive;
     private bool m_HowlingMonkiesActive;
 
+    // Enum states for the Heavenward Tides
     private enum HeavenwardTidesState
     {
         FADE_IN,
@@ -145,6 +148,7 @@ public class AudioManager : AudioEngine
     };
     private HeavenwardTidesState m_HTState;
 
+    // Enum states for the rain; based on the behavior of the baby.
     private enum RainState
     {
         STATIC,
@@ -154,7 +158,10 @@ public class AudioManager : AudioEngine
     private RainState m_RainState;
     private RainState m_PreviousRainState = RainState.NONE;
 
+    // Enum to keep track of the current ambiance
     Globals.Ambiance m_TransitionToAmbiance;
+
+    // Boolean to enable the change of ambiance
     private bool m_ChangeAmbiance;
 
 
@@ -163,8 +170,7 @@ public class AudioManager : AudioEngine
     {
         base.Start();
 
-        #region Player Sound Variables
-
+        /**************************** PLAYER SOUND VARIABLES ****************************/
         AddAudioFile("FootstepGrass");
         AddAudioFile("FootstepStone");
         AddAudioFile("FootstepWood");
@@ -180,10 +186,7 @@ public class AudioManager : AudioEngine
         AddAudioFile("SugarRowingLoop");
         AddAudioFile("IsauraDeath");
 
-        #endregion
-
-        #region Baby Sound Variables
-
+        /**************************** BABY SOUND VARIABLES ****************************/
         AddAudioFile("BabyAmbiance");
         AddAudioFile("BabyCry");
         AddAudioFile("BabyCryLoop");
@@ -213,10 +216,7 @@ public class AudioManager : AudioEngine
         m_BabyCalmingStateTriggered = false;
         m_BabyFadeOut = false;
 
-        #endregion
-
-        #region Ambiance Sound Variables
-
+        /**************************** AMBIANCE SOUND VARIABLES ****************************/
         AddAudioFile("CricketsLoop1");
         AddAudioFile("CricketsLoop2");
         AddAudioFile("WindForestLightLoop");
@@ -295,10 +295,7 @@ public class AudioManager : AudioEngine
 
         m_ChangeAmbiance = false;
 
-        #endregion
-
-        #region Object Sound Variables
-
+        /**************************** OBJECT SOUND VARIABLES ****************************/
         AddAudioFile("CartDragGrass");
         AddAudioFile("CartDragStone");
         AddAudioFile("CartDragWood");
@@ -332,9 +329,7 @@ public class AudioManager : AudioEngine
         AddAudioFile("ReflectionFade");
         AddAudioFile("FireOutdoor");
         
-        #endregion
-
-        #region Music Variables
+        /**************************** MUSIC VARIABLES ****************************/
 
         // Chapter 1 Music
         AddAudioFile("MusicCh1Ambiance1");
@@ -363,46 +358,59 @@ public class AudioManager : AudioEngine
         AddAudioFile("MusicCh4Layer3");
         AddAudioFile("MusicCh4Layer4");
 
-        #endregion
-
         PreLoadSounds();
     }
 
     // Update is called once per frame
     void Update()
     {
+        // Update game audio if the sounds are enabled
         if (m_AudioEnabled)
         {
+            // Set the current time according to Time.deltaTime
             m_DeltaTime = Time.deltaTime;
 
-            #region Ambiance Transition
+           /**************************** AMBIANCE TRANSITION LOGIC ****************************/
 
+           // If the ambiance transition flag has been set to true
             if (m_BeginTransition)
             {
+                // Decrement the transition timer by Time.deltaTime
                 m_TransitionTimer -= m_DeltaTime;
 
+                // If the transition timer has counted down to finish
                 if (m_TransitionTimer <= 0.0f)
                 {
+                    // Reset the transition flag
                     m_BeginTransition = false;
+
+                    // Set the game's current ambiance to the ambiance we want to transition to
                     Globals.CURRENT_AMBIANCE = m_TransitionToAmbiance;
+
+                    // Call the function to change the ambiance
                     ChangeAmbiance();
                 }
             }
 
-            #endregion
+            /**************************** AMBIANT SOUNDS UPDATE LOGIC ****************************/
 
-            #region Ambiant Sounds
-
+            // If the cricket sounds are active
             if (m_CricketsActive)
             {
+                // Increment the timers (this is the time between "chirps")
                 m_CricketsTimer1 += m_DeltaTime;
                 m_CricketsTimer2 += m_DeltaTime;
 
+                // If it's time for another "chirp", i.e. the timer has reached the pre-determined interval time
                 if (m_CricketsTimer1 >= m_CricketsInterval1)
                 {
+                    // Reset the timer
                     m_CricketsTimer1 = 0.0f;
+
+                    // Get a new interval for the time between "chirps"
                     m_CricketsInterval1 = GetInterval(m_CricketsLowerBound, m_CricketsUpperBound);
 
+                    // Cause the crickets to "chirp"
                     if (!IsPlaying("CricketsLoop1"))
                     {
                         Play("CricketsLoop1");
@@ -530,9 +538,7 @@ public class AudioManager : AudioEngine
                 }
             }
 
-            #endregion
-
-            #region Heavenward Tides
+            /**************************** HEAVENWARD TIDES UPDATE LOGIC ****************************/
 
             if (m_HTState == HeavenwardTidesState.STATIC)
             {
@@ -550,9 +556,7 @@ public class AudioManager : AudioEngine
                 }
             }
 
-            #endregion
-
-            #region Baby Sounds
+            /**************************** BABY SOUNDS UPDATE LOGIC ****************************/
 
             if (m_BabyState == BabyState.HAPPY)
             {
@@ -594,11 +598,13 @@ public class AudioManager : AudioEngine
                 }
             }
 
-            #endregion
-
+            // If we're changing ambiance (because of a scene switch or related event)
             if (m_ChangeAmbiance)
             {
+                // Reset the ambiance change flag
                 m_ChangeAmbiance = false;
+
+                // Fade in the new ambiance over the specified time interval
                 FadeInAmbiance(m_FadeInInterval);
             }
         }
@@ -606,13 +612,19 @@ public class AudioManager : AudioEngine
 
     /**************************** FUNCTIONS FOR MODIFYING GAMES AMBIANT SOUNDS ****************************/
 
+    // This function changes the ambiance based on the ambiance selected to transition to. This function is called in the update function of the AudioManager after transitioning from the previous ambiance.
     public void ChangeAmbiance()
     {
+        // If audio is enabled
         if (m_AudioEnabled)
         {
+            // Switch our ambiance based on the types of ambiance enumerated in our globals script
             switch (Globals.CURRENT_AMBIANCE)
             {
+                // The ambiance type is JUNGLE
                 case Globals.Ambiance.JUNGLE:
+
+                    // Set the JUNGLE ambiance flag to true; set the rest to false
                     JungleAmbiance(true);
                     PlantationAmbiance(false);
                     CaveAmbiance(false);
@@ -703,12 +715,12 @@ public class AudioManager : AudioEngine
                     break;
             }
             
+            // This flag tells the update function to transition to the newly selected ambiance
             m_ChangeAmbiance = true;
         }
     }
 
-    // Function to begin a transition, fading out and fading in, between
-    // two ambiance types.
+    // Function to begin a transition, fading out and fading in, between two ambiance types
     public void StartAmbianceTransition(Globals.Ambiance ambiance, float fadeOutInterval, float fadeInInterval)
     {
         if (m_AudioEnabled)
@@ -772,8 +784,7 @@ public class AudioManager : AudioEngine
 
     /**************************** FUNCTIONS FOR FADING ****************************/
 
-    // Function to fade in all of the ambiant sounds that should
-    // currently be playing over a specific time interval.
+    // Function to fade in all of the ambiant sounds that should currently be playing over a specific time interval.
     public void FadeInAmbiance(float timeInterval)
     {
         if (m_AudioEnabled)
@@ -1056,7 +1067,7 @@ public class AudioManager : AudioEngine
 
     #endregion
 
-    /**************************** FUNCTIONS FOR HEAVENWARD TIDES ****************************/
+    /**************************** HEAVENWARD TIDES FUNCTIONS ****************************/
 
     public void SetHeavenwardTidesVolume(float volume)
     {
@@ -1145,9 +1156,7 @@ public class AudioManager : AudioEngine
         }
     }
 
-    #endregion
-
-    #region Thunder
+    /**************************** THUNDER LOGIC FUNCTIONS ****************************/
 
     public void ThunderAmbianceStart()
     {
@@ -1170,9 +1179,7 @@ public class AudioManager : AudioEngine
         }
     }
 
-    #endregion
-
-    #region Rain
+    /**************************** RAIN LOGIC FUNCTIONS ****************************/
 
     public void RainStaticState()
     {
@@ -1232,9 +1239,7 @@ public class AudioManager : AudioEngine
         m_PreviousRainState = RainState.NONE;
     }
 
-    #endregion
-
-    #region Engine
+    /**************************** AUDIOMANAGER FUNCTIONS ****************************/
 
     public void DisableAudio()
     {
