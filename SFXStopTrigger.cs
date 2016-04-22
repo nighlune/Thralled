@@ -17,8 +17,6 @@ public class SFXStopTrigger : MonoBehaviour
 
     void OnTriggerEnter(Collider other)
     {
-        //print(AudioManager.Instance.IsPlaying(m_AudioFilePrefab.name));
-
         if (other.gameObject.tag == "Player" && !m_TriggerOnce)
         {
             m_TriggerOnce = true;

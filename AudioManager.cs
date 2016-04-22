@@ -835,8 +835,7 @@ public class AudioManager : AudioEngine
         }
     }
 
-    // Function to fade out all currently playing ambiant sounds
-    // to a minimum volume, over a specific time interval.
+    // Function to fade out all currently playing ambiant sounds to a minimum volume, over a specific time interval
     public void FadeOutAmbiance(float timeInterval, float volume)
     {
         if (m_AudioEnabled)
@@ -1065,8 +1064,6 @@ public class AudioManager : AudioEngine
         }
     }
 
-    #endregion
-
     /**************************** HEAVENWARD TIDES FUNCTIONS ****************************/
 
     public void SetHeavenwardTidesVolume(float volume)
@@ -1260,6 +1257,4 @@ public class AudioManager : AudioEngine
     {
         Load("HeavenwardTidesCountdown");
     }
-
-    #endregion
 }
